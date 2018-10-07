@@ -1,0 +1,41 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <title>Generative Art - 1</title>
+    <meta charset="utf-8">
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script type="text/javascript" src="scene.js"></script>
+    <style>
+      body { 
+        margin: 0;
+        overflow: hidden;
+        height: 100%;
+        position: absolute; top: 0; right: 0; bottom: 0; left: 0;
+      }
+      .centered-wrapper {
+        position: relative;
+        min-height: 100%;
+        display: block;
+      }
+      .centered {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+      }
+      input, button {
+        font-size: 2em;
+      }
+    </style>
+  </head>
+  <body>
+    <div class='centered-wrapper' id='user-input'>
+      <div class='centered'>
+        <input id='seed' type='text' width='10' value='Enter a number'/>
+        <button id='doit'>Make me some art</button>
+      </div>
+    </div>
+  </body>
+</html>

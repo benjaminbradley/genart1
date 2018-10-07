@@ -1,0 +1,24 @@
+TODO:
+- variable background gradient color depends on LSD
+- flowers/plants (branches based on divisibility of number - 2, 3, 4, 5, 6, 7, 8)
+- validate input number
+TODO - STARS
+- increase number of stars in the sky nonlinearly/log with seed size
+- distribute stars - less lower down
+- make lower stars more transparent
+- color some stars randomly
+- blink some stars
+
+DONE:
+- stars appear over time
+- stars in the sky
+- user number input
+- background gradient
+
+DECISIONS:
+- upper limit on number
+
+
+CONCEPT:
+user enters a number
+number is broken down into component characteristics, which are used to generate a landscape scene - size, order of magnitude, odd/even, divisibility, etc.
