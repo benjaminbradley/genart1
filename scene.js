@@ -26,9 +26,11 @@ Random.prototype.next = function () {
 Random.prototype.nextFloat = function () {
   return (this.next() - 1) / 2147483646;
 };
-
-
 var rand;
+function randInt(max) {
+  return Math.floor(max*rand.nextFloat());
+}
+
 window.onload = function() {
   init_inputs();
   $('#doit').click(function() {
@@ -53,6 +55,8 @@ function generate_art(input_seed) {
   // GLOBAL CONSTANTS
   //TODO
   var max_stars = 100;  //TODO: base on input_seed
+  var colors = ['gray', 'teal', 'navy', 'blue', '#8000ff', 'purple', 'red', '#ff4000', '#ff8000', 'olive'];
+  var bg_color = colors[input_seed % 10];
 
   // show input seed in title
   var init_title = $(document).attr("title");
@@ -81,7 +85,7 @@ function generate_art(input_seed) {
   bg_grad.appendChild(stop1);
   var stop2 = document.createElementNS("http://www.w3.org/2000/svg", "stop");
   stop2.setAttribute("offset","100%");
-  stop2.setAttribute("stop-color","blue");
+  stop2.setAttribute("stop-color", bg_color);
   bg_grad.appendChild(stop2);
   defs.appendChild(bg_grad);
   svg.appendChild(defs);
@@ -100,13 +104,13 @@ function generate_art(input_seed) {
   function makeStar() {
     var star = document.createElementNS("http://www.w3.org/2000/svg", "text");
     star.textContent = ".";
-    star.setAttribute("x", Math.floor(canvas_w*rand.nextFloat()));
-    star.setAttribute("y", Math.floor(canvas_h/2*rand.nextFloat()));
+    star.setAttribute("x", randInt(canvas_w));
+    star.setAttribute("y", randInt(canvas_h));
     star.setAttribute("fill", 'white');
     svg.appendChild(star);
     num_stars++;
     if(num_stars < max_stars) {
-      setTimeout(makeStar, 3000*rand.nextFloat());
+      setTimeout(makeStar, randInt(3000));
     }
   }
   makeStar();
