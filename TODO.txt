@@ -4,7 +4,6 @@ TODO:
 TODO - STARS
 - increase number of stars in the sky nonlinearly/log with seed size
 - distribute stars - less lower down
-- make lower stars more transparent
 - color some stars randomly
 - blink some stars
 

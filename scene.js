@@ -31,23 +31,32 @@ function randInt(max) {
   return Math.floor(max*rand.nextFloat());
 }
 
+function doit() {
+  // get user input
+  var user_seed = $('#seed').val();
+  // validate user input
+  if(parseInt(user_seed) != user_seed) {
+    user_seed = 0;
+  } else {
+    user_seed = parseInt(user_seed);
+  }
+  //TODO
+  // if it's all good, generate some art!
+  rand = new Random(user_seed);
+  // hide user input form
+  $('#user-input').hide();
+  generate_art(user_seed);
+}
+
 window.onload = function() {
   init_inputs();
   $('#doit').click(function() {
-    // get user input
-    var user_seed = $('#seed').val();
-    // validate user input
-    if(parseInt(user_seed) != user_seed) {
-      user_seed = 0;
-    } else {
-      user_seed = parseInt(user_seed);
+    doit();
+  });
+  $('#seed').keypress(function(e) {
+    if(e.which == 13) {
+      doit();
     }
-    //TODO
-    // if it's all good, generate some art!
-    rand = new Random(user_seed);
-    // hide user input form
-    $('#user-input').hide();
-    generate_art(user_seed);
   });
 }
 
@@ -55,6 +64,8 @@ function generate_art(input_seed) {
   // GLOBAL CONSTANTS
   //TODO
   var max_stars = 100;  //TODO: base on input_seed
+  var star_min_height_pct = 0.7;
+  var star_appearance_freq_ms = 3000;
   var colors = ['gray', 'teal', 'navy', 'blue', '#8000ff', 'purple', 'red', '#ff4000', '#ff8000', 'olive'];
   var bg_color = colors[input_seed % 10];
 
@@ -100,17 +111,21 @@ function generate_art(input_seed) {
 
 
   // draw some stars
+  var star_max_y = star_min_height_pct*canvas_h;
   var num_stars = 0;
   function makeStar() {
     var star = document.createElementNS("http://www.w3.org/2000/svg", "text");
     star.textContent = ".";
+    var star_y = randInt(star_max_y);
+    var star_opacity = (star_max_y-star_y) / star_max_y;
     star.setAttribute("x", randInt(canvas_w));
-    star.setAttribute("y", randInt(canvas_h));
+    star.setAttribute("y", star_y);
+    star.setAttribute("opacity", star_opacity);
     star.setAttribute("fill", 'white');
     svg.appendChild(star);
     num_stars++;
     if(num_stars < max_stars) {
-      setTimeout(makeStar, randInt(3000));
+      setTimeout(makeStar, randInt(star_appearance_freq_ms));
     }
   }
   makeStar();
