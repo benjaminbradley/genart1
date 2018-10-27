@@ -77,6 +77,7 @@ function generate_art(input_seed) {
   var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
   var canvas_w = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
   var canvas_h = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
+  console.log("Canvas size: "+canvas_w+'x'+canvas_h);
   svg.setAttribute('width', canvas_w);
   svg.setAttribute('height', canvas_h);
   svg.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns:xlink", "http://www.w3.org/1999/xlink");
@@ -129,4 +130,39 @@ function generate_art(input_seed) {
     }
   }
   makeStar();
+
+  // draw some plant stalks
+  var max_stalks = Math.ceil(canvas_w / 100);
+  var num_stalks = 0;
+  var stalk_y_min = star_max_y*1.2;
+  var stalk_y_max = canvas_h;
+  var stalk_height_min = canvas_h*0.1;
+  var stalk_height_max = canvas_h*0.3;
+  function makeStalk() {
+    var stalk = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    var stalk_x = randInt(canvas_w);
+    var stalk_height = randInt(stalk_height_max-stalk_height_min)+stalk_height_min;
+    var stalk_bez_xrange = stalk_height;
+    var stalk_bottom_y = randInt(stalk_y_max-stalk_y_min)+stalk_y_min;
+    var stalk_top_y = stalk_bottom_y-stalk_height;
+    var stalk_b1_x = stalk_x+randInt(stalk_bez_xrange)-stalk_bez_xrange/2;
+    var stalk_b1_y = stalk_bottom_y-randInt(stalk_height);
+    var stalk_b2_x = stalk_x+randInt(stalk_bez_xrange)-stalk_bez_xrange/2;
+    var stalk_b2_y = stalk_top_y+randInt(stalk_height)-stalk_height/2;
+    var stalk_def = 
+      'M'+stalk_x+','+stalk_bottom_y+
+      'C'+stalk_b1_x+','+stalk_b1_y+
+      ','+stalk_b2_x+','+stalk_b2_y+
+      ','+stalk_x+','+stalk_top_y;
+    stalk.setAttribute("d", stalk_def);
+    stalk.setAttribute("stroke", 'white');
+    stalk.setAttribute("fill", 'transparent');
+    stalk.setAttribute("style", 'stroke-width:3px');
+    svg.appendChild(stalk);
+    num_stalks++;
+    if(num_stalks < max_stalks) {
+      setTimeout(makeStalk, 300);
+    }
+  }
+  makeStalk();
 }
