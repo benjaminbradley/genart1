@@ -31,6 +31,29 @@ function randInt(max) {
   return Math.floor(max*rand.nextFloat());
 }
 
+// this function evolves a numerical value from init_val to final_val via a given percentage change factor
+// positive factor will effect accelerating growth, negative factor = decelerating
+// minimum per-invocation change of 1 ensures that cur_val will eventually reach final_val, no matter how small the factor
+// max value checks ensure that cur_value will never pass final_val
+function moveToward(init_val, cur_val, final_val, factor) {
+  val_range = Math.abs(final_val - init_val);
+  rel_val= Math.abs(cur_val - init_val);
+  if(final_val < init_val) factor *= -1;
+  rel_newval = Math.ceil(rel_val * factor);
+  var orig = cur_val;
+  new_val = init_val + rel_newval;
+  if(factor > 0 && new_val > final_val) {
+    new_val = final_val;
+  } else if(factor < 0 && new_val < final_val) {
+    new_val = final_val;
+  }
+  if(orig == new_val && new_val != final_val) {
+    new_val += (factor < 0 ? -1 : 1);
+  }
+  return new_val;
+}
+
+
 function doit() {
   // get user input
   var user_seed = $('#seed').val();
@@ -134,34 +157,73 @@ function generate_art(input_seed) {
   // draw some plant stalks
   var max_stalks = Math.ceil(canvas_w / 100);
   var num_stalks = 0;
-  var stalk_y_min = star_max_y*1.2;
+  var stalk_y_min = Math.ceil(star_max_y*1.2);
   var stalk_y_max = canvas_h;
   var stalk_height_min = canvas_h*0.1;
   var stalk_height_max = canvas_h*0.3;
+  // define Plant class
+  function Plant() {
+    var self = this;
+    // declare and initialize instance attributes
+    this.stalk_svg = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    this.stalk_x = randInt(canvas_w);
+    this.stalk_height_final = randInt(stalk_height_max-stalk_height_min)+stalk_height_min;
+    this.stalk_height_init = 10;
+    this.stalk_height_cur = this.stalk_height_init;
+    var stalk_bez_xrange = this.stalk_height_final;
+    this.stalk_bottom_y = randInt(stalk_y_max-stalk_y_min)+stalk_y_min;
+    this.stalk_top_y_final = this.stalk_bottom_y-this.stalk_height_final;
+    this.stalk_top_y_init = this.stalk_bottom_y-this.stalk_height_cur;
+    this.stalk_top_y_cur = this.stalk_top_y_init;
+    this.stalk_b1_x_final = this.stalk_x+randInt(stalk_bez_xrange)-Math.floor(stalk_bez_xrange/2);
+    this.stalk_b1_x_init = this.stalk_x;
+    this.stalk_b1_x_cur = this.stalk_b1_x_init;
+    this.stalk_b1_y_final = this.stalk_bottom_y-randInt(this.stalk_height_final);
+    this.stalk_b1_y_init = this.stalk_bottom_y;
+    this.stalk_b1_y_cur = this.stalk_b1_y_init;
+    this.stalk_b2_x_final = this.stalk_x+randInt(stalk_bez_xrange)-Math.floor(stalk_bez_xrange/2);
+    this.stalk_b2_x_init = this.stalk_x;
+    this.stalk_b2_x_cur = this.stalk_b2_x_init;
+    this.stalk_b2_y_final = this.stalk_top_y_final+randInt(this.stalk_height_final)-Math.floor(this.stalk_height_final/2);
+    this.stalk_b2_y_init = this.stalk_top_y_cur;
+    this.stalk_b2_y_cur = this.stalk_b2_y_init;
+    this.updateDef = function() {
+      this.stalk_height_cur = moveToward(this.stalk_height_init, this.stalk_height_cur, this.stalk_height_final, 1.1);
+      var stalk_bez_xrange = this.stalk_height_cur;
+      this.stalk_top_y_cur = this.stalk_bottom_y-this.stalk_height_cur;
+      this.stalk_b1_x_cur = moveToward(this.stalk_b1_x_init, this.stalk_b1_x_cur, this.stalk_b1_x_final, 1.01);
+      this.stalk_b1_y_cur = moveToward(this.stalk_b1_y_init, this.stalk_b1_y_cur, this.stalk_b1_y_final, 1.05);
+      this.stalk_b2_x_cur = moveToward(this.stalk_b2_x_init, this.stalk_b2_x_cur, this.stalk_b2_x_final, 1.01);
+      this.stalk_b2_y_cur = this.stalk_top_y_cur;
+      var stalk_def =
+        'M'+this.stalk_x+','+this.stalk_bottom_y+
+        'C'+this.stalk_b1_x_cur+','+this.stalk_b1_y_cur+
+        ','+this.stalk_b2_x_cur+','+this.stalk_b2_y_cur+
+        ','+this.stalk_x+','+this.stalk_top_y_cur;
+      this.stalk_svg.setAttribute("d", stalk_def);
+    };
+    this.updateDef();
+    this.stalk_svg.setAttribute("stroke", 'white');
+    this.stalk_svg.setAttribute("fill", 'transparent');
+    this.stalk_svg.setAttribute("style", 'stroke-width:3px');
+    svg.appendChild(this.stalk_svg);
+    // define evolution function
+    this.evolve = function() {
+      self.updateDef();
+      // continue updating if needed
+      if(this.stalk_height_cur < this.stalk_height_final) {
+        setTimeout(function(){self.evolve();}, 100);
+      }
+    };
+    setTimeout(function(){self.evolve();}, 100);
+
+  }
   function makeStalk() {
-    var stalk = document.createElementNS("http://www.w3.org/2000/svg", "path");
-    var stalk_x = randInt(canvas_w);
-    var stalk_height = randInt(stalk_height_max-stalk_height_min)+stalk_height_min;
-    var stalk_bez_xrange = stalk_height;
-    var stalk_bottom_y = randInt(stalk_y_max-stalk_y_min)+stalk_y_min;
-    var stalk_top_y = stalk_bottom_y-stalk_height;
-    var stalk_b1_x = stalk_x+randInt(stalk_bez_xrange)-stalk_bez_xrange/2;
-    var stalk_b1_y = stalk_bottom_y-randInt(stalk_height);
-    var stalk_b2_x = stalk_x+randInt(stalk_bez_xrange)-stalk_bez_xrange/2;
-    var stalk_b2_y = stalk_top_y+randInt(stalk_height)-stalk_height/2;
-    var stalk_def = 
-      'M'+stalk_x+','+stalk_bottom_y+
-      'C'+stalk_b1_x+','+stalk_b1_y+
-      ','+stalk_b2_x+','+stalk_b2_y+
-      ','+stalk_x+','+stalk_top_y;
-    stalk.setAttribute("d", stalk_def);
-    stalk.setAttribute("stroke", 'white');
-    stalk.setAttribute("fill", 'transparent');
-    stalk.setAttribute("style", 'stroke-width:3px');
-    svg.appendChild(stalk);
+    p = new Plant();
+    p.plant_id = num_stalks;
     num_stalks++;
     if(num_stalks < max_stalks) {
-      setTimeout(makeStalk, 300);
+      setTimeout(makeStalk, 2500);
     }
   }
   makeStalk();
