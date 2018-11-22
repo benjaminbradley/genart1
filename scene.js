@@ -68,7 +68,7 @@ function doit() {
   rand = new Random(user_seed);
   // hide user input form
   $('#user-input').hide();
-  generate_art(user_seed);
+  setTimeout(function(){generate_art(user_seed);}, 200);  // initiate with a slight delay to give mobile devices time to hide the keyboard
 }
 
 window.onload = function() {
