@@ -1,5 +1,4 @@
 TODO:
-- plant stalks in small range of colors, complementary to BG
 - vary number of plants based on ___ ?
 - let plant stalks drift (only b1,b2,top)
 - flowers/plants (branches based on divisibility of number - 2, 3, 4, 5, 6, 7, 8)
@@ -11,6 +10,8 @@ TODO - STARS
 - blink some stars
 
 DONE:
+- plant stalks in small range of colors, complementary to BG
+- plant stalks grow up over time to full height
 - plant stalks
 - make lower stars more transparent
 - stars appear over time
@@ -25,3 +26,9 @@ DECISIONS:
 CONCEPT:
 user enters a number
 number is broken down into component characteristics, which are used to generate a landscape scene - size, order of magnitude, odd/even, divisibility, etc.
+
+EXHIBITION IDEAS:
+- enter your own number - throughout
+- render the same seed across time, each git commit, or key stills thereof
+- render various clusters of seeds, e.g. 1-10, 10,20,30,40,50, etc.
+- give away digitally signed copy (usb + hash certificate ?)

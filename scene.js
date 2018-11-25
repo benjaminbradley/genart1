@@ -89,8 +89,22 @@ function generate_art(input_seed) {
   var max_stars = 100;  //TODO: base on input_seed
   var star_min_height_pct = 0.7;
   var star_appearance_freq_ms = 3000;
-  var colors = ['gray', 'teal', 'navy', 'blue', '#8000ff', 'purple', 'red', '#ff4000', '#ff8000', 'olive'];
-  var bg_color = colors[input_seed % 10];
+  var color_palette_index = input_seed % 10;
+  var color_palette_dict = [
+    ['#b2b2b2', '#50394c', '#f4e1d2', '#ffef96'],
+    ['#80ced6', '#d5f4e6', '#fefbd8', '#618685'],
+    ['#034f84', '#92a8d1', '#f7cac9', '#f7786b'],
+    ['#4040a1', '#36486b', '#618685', '#fefbd8'],
+    ['#6b5b95', '#878f99', '#a2b9bc', '#b2ad7f'],
+    ['#622569', '#b8a9c9', '#d6d4e0', '#5b9aa0'],
+    ['#c83349', '#e06377', '#eeac99', '#f9d5e5'],
+    ['#ff7b25', '#d64161', '#6b5b95', '#feb236'],
+    ['#d96459', '#f2ae72', '#588c7e', '#f2e394'],
+    ['#b2ad7f', '#878f99', '#a2b9bc', '#6b5b95']
+  ];
+  var color_palette = color_palette_dict[color_palette_index];
+  var bg_color = color_palette[0];
+  var secondary_colors = color_palette.slice(1);
 
   // show input seed in title
   var init_title = $(document).attr("title");
@@ -203,7 +217,7 @@ function generate_art(input_seed) {
       this.stalk_svg.setAttribute("d", stalk_def);
     };
     this.updateDef();
-    this.stalk_svg.setAttribute("stroke", 'white');
+    this.stalk_svg.setAttribute("stroke", secondary_colors[randInt(secondary_colors.length)]);
     this.stalk_svg.setAttribute("fill", 'transparent');
     this.stalk_svg.setAttribute("style", 'stroke-width:3px');
     svg.appendChild(this.stalk_svg);
