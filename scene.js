@@ -53,6 +53,13 @@ function moveToward(init_val, cur_val, final_val, factor) {
   return new_val;
 }
 
+function getDelay(default_ms) {
+  if(window.location.search.indexOf('debug') >= 0) {
+    return 0;
+  } else {
+    return default_ms;
+  }
+}
 
 function doit() {
   // get user input
@@ -71,6 +78,7 @@ function doit() {
   setTimeout(function(){generate_art(user_seed);}, 200);  // initiate with a slight delay to give mobile devices time to hide the keyboard
 }
 
+
 window.onload = function() {
   init_inputs();
   $('#doit').click(function() {
@@ -86,7 +94,7 @@ window.onload = function() {
 function generate_art(input_seed) {
   // GLOBAL CONSTANTS
   //TODO
-  var max_stars = 100;  //TODO: base on input_seed
+  var max_stars = 4 * Math.log(10 + Math.abs(input_seed));
   var star_min_height_pct = 0.7;
   var star_appearance_freq_ms = 3000;
   var color_palette_index = input_seed % 10;
@@ -163,7 +171,7 @@ function generate_art(input_seed) {
     svg.appendChild(star);
     num_stars++;
     if(num_stars < max_stars) {
-      setTimeout(makeStar, randInt(star_appearance_freq_ms));
+      setTimeout(makeStar, getDelay(randInt(star_appearance_freq_ms)));
     }
   }
   makeStar();
@@ -237,7 +245,7 @@ function generate_art(input_seed) {
     p.plant_id = num_stalks;
     num_stalks++;
     if(num_stalks < max_stalks) {
-      setTimeout(makeStalk, 2500);
+      setTimeout(makeStalk, getDelay(2500));
     }
   }
   makeStalk();
