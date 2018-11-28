@@ -177,7 +177,7 @@ function generate_art(input_seed) {
   makeStar();
 
   // draw some plant stalks
-  var max_stalks = Math.ceil(canvas_w / 100);
+  var max_stalks = Math.ceil(canvas_w / 500 * Math.log(1 + input_seed/100));
   var num_stalks = 0;
   var stalk_y_min = Math.ceil(star_max_y*1.2);
   var stalk_y_max = canvas_h;
