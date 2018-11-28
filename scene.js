@@ -95,7 +95,7 @@ function generate_art(input_seed) {
   // GLOBAL CONSTANTS
   //TODO
   var max_stars = 4 * Math.log(10 + Math.abs(input_seed));
-  var star_min_height_pct = 0.7;
+  var star_min_height_pct = 0.6;
   var star_appearance_freq_ms = 3000;
   var color_palette_index = input_seed % 10;
   var color_palette_dict = [
@@ -180,10 +180,10 @@ function generate_art(input_seed) {
   // draw some plant stalks
   var max_stalks = Math.ceil(canvas_w / 500 * Math.log(1 + input_seed/100));
   var num_stalks = 0;
-  var stalk_y_min = Math.ceil(star_max_y*1.2);
+  var stalk_y_min = Math.ceil(star_max_y*1.1);
   var stalk_y_max = canvas_h;
-  var stalk_height_min = canvas_h*0.1;
-  var stalk_height_max = canvas_h*0.3;
+  var stalk_height_min = Math.floor(canvas_h*0.1);
+  var stalk_height_max = Math.ceil(canvas_h*0.3);
   // define Plant class
   function Plant() {
     var self = this;
@@ -194,7 +194,7 @@ function generate_art(input_seed) {
     this.stalk_height_init = 10;
     this.stalk_height_cur = this.stalk_height_init;
     var stalk_bez_xrange = this.stalk_height_final;
-    this.stalk_bottom_y = randInt(stalk_y_max-stalk_y_min)+stalk_y_min;
+    this.stalk_bottom_y = stalk_y_min + this.stalk_height_final + Math.floor(randInt(this.stalk_height_final / 2));
     this.stalk_top_y_final = this.stalk_bottom_y-this.stalk_height_final;
     this.stalk_top_y_init = this.stalk_bottom_y-this.stalk_height_cur;
     this.stalk_top_y_cur = this.stalk_top_y_init;

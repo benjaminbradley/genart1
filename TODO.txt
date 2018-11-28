@@ -1,16 +1,19 @@
 TODO:
 - validate input number
 TODO - PLANTS
-- shorter plants "in back"
+- ensure z-order by sorting elements and adding back to front
+- rotate flowers
 - let plant stalks drift (only b1,b2,top)
 - flowers/plants (branches based on divisibility of number - 2, 3, 4, 5, 6, 7, 8)
-- size flowers based on plant height
 TODO - STARS
 - distribute stars - less lower down
 - color some stars randomly
 - blink some stars
 
 DONE:
+- shorter plants "in back"
+- size flowers based on plant height
+- basic flowers
 - vary number of plants
 - increase number of stars in the sky nonlinearly/log with seed size
 - plant stalks in small range of colors, complementary to BG
