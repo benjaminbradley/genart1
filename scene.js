@@ -112,7 +112,8 @@ function generate_art(input_seed) {
   ];
   var color_palette = color_palette_dict[color_palette_index];
   var bg_color = color_palette[0];
-  var secondary_colors = color_palette.slice(1);
+  var secondary_colors = color_palette.slice(1,3);
+  var highlight_color = color_palette[3];
 
   // show input seed in title
   var init_title = $(document).attr("title");
@@ -209,6 +210,16 @@ function generate_art(input_seed) {
     this.stalk_b2_y_final = this.stalk_top_y_final+randInt(this.stalk_height_final)-Math.floor(this.stalk_height_final/2);
     this.stalk_b2_y_init = this.stalk_top_y_cur;
     this.stalk_b2_y_cur = this.stalk_b2_y_init;
+    this.stalk_color = secondary_colors[randInt(secondary_colors.length)];
+    this.flower_style = 1;
+    this.flower_svg = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+    this.flower_rotation = randInt(360);
+    this.flower_svg.setAttribute("style",
+      "fill:"+highlight_color+
+      ";stroke:"+this.stalk_color+
+      ";stroke-width:3px;fill-rule:nonzero;"
+    );
+    svg.appendChild(this.flower_svg);
     this.updateDef = function() {
       this.stalk_height_cur = moveToward(this.stalk_height_init, this.stalk_height_cur, this.stalk_height_final, 1.1);
       var stalk_bez_xrange = this.stalk_height_cur;
@@ -223,9 +234,23 @@ function generate_art(input_seed) {
         ','+this.stalk_b2_x_cur+','+this.stalk_b2_y_cur+
         ','+this.stalk_x+','+this.stalk_top_y_cur;
       this.stalk_svg.setAttribute("d", stalk_def);
+      // draw flower
+      if(this.flower_style == 1) {
+        var flower_tri_base_y = this.stalk_top_y_cur - Math.floor(this.stalk_height_cur/15);
+        var flower_tri_base_x = this.stalk_x;
+        var flower_tri_side = Math.ceil(this.stalk_height_cur / 4);
+        var botlt_x = flower_tri_base_x - Math.floor(flower_tri_side/2);
+        var botlt_y = flower_tri_base_y;
+        var botrt_x = flower_tri_base_x + Math.floor(flower_tri_side/2);
+        var botrt_y = flower_tri_base_y;
+        var top_x = flower_tri_base_x;
+        var top_y = flower_tri_base_y - flower_tri_side;
+        var triangle_def = botlt_x+','+botlt_y+' '+botrt_x+','+botrt_y+' '+top_x+','+top_y;
+        this.flower_svg.setAttribute("points", triangle_def);
+      }
     };
     this.updateDef();
-    this.stalk_svg.setAttribute("stroke", secondary_colors[randInt(secondary_colors.length)]);
+    this.stalk_svg.setAttribute("stroke", this.stalk_color);
     this.stalk_svg.setAttribute("fill", 'transparent');
     this.stalk_svg.setAttribute("style", 'stroke-width:3px');
     svg.appendChild(this.stalk_svg);
