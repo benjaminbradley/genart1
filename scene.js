@@ -228,6 +228,7 @@ function generate_art(input_seed) {
       ";stroke:"+this.stalk_color+
       ";stroke-width:3px;fill-rule:nonzero;"
     );
+    this.flower_svg.setAttribute("data-base-y", this.stalk_bottom_y);
     this.updateDef = function() {
       this.stalk_height_cur = moveToward(this.stalk_height_init, this.stalk_height_cur, this.stalk_height_final, 1.1);
       var stalk_bez_xrange = this.stalk_height_cur;
@@ -242,6 +243,7 @@ function generate_art(input_seed) {
         ','+this.stalk_b2_x_cur+','+this.stalk_b2_y_cur+
         ','+this.stalk_x+','+this.stalk_top_y_cur;
       this.stalk_svg.setAttribute("d", stalk_def);
+      this.stalk_svg.setAttribute("data-base-y", this.stalk_bottom_y);
       // draw flower
       if(this.flower_style == 1) {
         var flower_tri_base_y = this.stalk_top_y_cur - Math.floor(this.stalk_height_cur/15);
@@ -264,8 +266,26 @@ function generate_art(input_seed) {
     this.stalk_svg.setAttribute("stroke", this.stalk_color);
     this.stalk_svg.setAttribute("fill", 'transparent');
     this.stalk_svg.setAttribute("style", 'stroke-width:3px');
-    svg.appendChild(this.stalk_svg);
-    svg.appendChild(this.flower_svg);
+    // insert elements to preserve order of the data-base-y attribute
+    var this_base_y = this.flower_svg.getAttribute("data-base-y");
+    var svgs_inserted = false;
+    for(i = 0; i < svg.childNodes.length; i++) {
+      var child_base_y = svg.childNodes[i].getAttribute('data-base-y');
+      if(child_base_y != null) {
+        if(this_base_y < child_base_y) {
+          svgs_inserted = true;
+          svg.insertBefore(this.flower_svg, svg.childNodes[i]);
+          svg.insertBefore(this.stalk_svg, svg.childNodes[i]);
+          console.log("inserting "+this_base_y+" before "+child_base_y);
+          break;
+        }
+      }
+    }
+    if(!svgs_inserted) {
+      svg.appendChild(this.stalk_svg);
+      svg.appendChild(this.flower_svg);
+      console.log(this_base_y+" not inserted, appending");
+    }
     // define evolution function
     this.evolve = function() {
       self.updateDef();
