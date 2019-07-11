@@ -61,16 +61,25 @@ function getDelay(default_ms) {
   }
 }
 
+function errorMessage(msg) {
+  $('#message').html(msg);
+}
+
 function doit() {
   // get user input
   var user_seed = $('#seed').val();
   // validate user input
   if(parseInt(user_seed) != user_seed) {
-    user_seed = 0;
+    errorMessage("Input must be a whole number");
+    return;
   } else {
     user_seed = parseInt(user_seed);
+    if(user_seed < 0) {
+      errorMessage("Input number must not be negative");
+      return;
+    }
   }
-  //TODO
+  errorMessage(""); // clear error message
   // if it's all good, generate some art!
   rand = new Random(user_seed);
   // hide user input form
