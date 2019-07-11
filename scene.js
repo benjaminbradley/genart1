@@ -228,7 +228,6 @@ function generate_art(input_seed) {
       ";stroke:"+this.stalk_color+
       ";stroke-width:3px;fill-rule:nonzero;"
     );
-    svg.appendChild(this.flower_svg);
     this.updateDef = function() {
       this.stalk_height_cur = moveToward(this.stalk_height_init, this.stalk_height_cur, this.stalk_height_final, 1.1);
       var stalk_bez_xrange = this.stalk_height_cur;
@@ -256,6 +255,9 @@ function generate_art(input_seed) {
         var top_y = flower_tri_base_y - flower_tri_side;
         var triangle_def = botlt_x+','+botlt_y+' '+botrt_x+','+botrt_y+' '+top_x+','+top_y;
         this.flower_svg.setAttribute("points", triangle_def);
+        var rotation_ctr_x = flower_tri_base_x;
+        var rotation_ctr_y = flower_tri_base_y;
+        this.flower_svg.setAttribute("transform", "rotate("+this.flower_rotation+", "+rotation_ctr_x+", "+rotation_ctr_y+")")
       }
     };
     this.updateDef();
@@ -263,6 +265,7 @@ function generate_art(input_seed) {
     this.stalk_svg.setAttribute("fill", 'transparent');
     this.stalk_svg.setAttribute("style", 'stroke-width:3px');
     svg.appendChild(this.stalk_svg);
+    svg.appendChild(this.flower_svg);
     // define evolution function
     this.evolve = function() {
       self.updateDef();

@@ -1,6 +1,5 @@
 TODO - PLANTS
 - ensure z-order by sorting elements and adding back to front
-- rotate flowers
 - let plant stalks drift (only b1,b2,top)
 - flowers/plants (branches based on divisibility of number - 2, 3, 4, 5, 6, 7, 8)
 TODO - STARS
@@ -9,6 +8,7 @@ TODO - STARS
 - blink some stars
 
 DONE:
+- rotate flowers
 - validate input number
 - shorter plants "in back"
 - size flowers based on plant height
