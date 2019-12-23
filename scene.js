@@ -222,7 +222,9 @@ function generate_art(input_seed) {
     this.stalk_color = secondary_colors[randInt(secondary_colors.length)];
     this.flower_style = 1;
     this.flower_svg = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
-    this.flower_rotation = randInt(360);
+    this.flower_rotation_final = -180 + randInt(360);
+    this.flower_rotation_init = 0;
+    this.flower_rotation_cur = this.flower_rotation_init;
     this.flower_svg.setAttribute("style",
       "fill:"+highlight_color+
       ";stroke:"+this.stalk_color+
@@ -245,6 +247,7 @@ function generate_art(input_seed) {
       this.stalk_svg.setAttribute("d", stalk_def);
       this.stalk_svg.setAttribute("data-base-y", this.stalk_bottom_y);
       // draw flower
+      this.flower_rotation_cur = moveToward(this.flower_rotation_init, this.flower_rotation_cur, this.flower_rotation_final, 1.1);
       if(this.flower_style == 1) {
         var flower_tri_base_y = this.stalk_top_y_cur - Math.floor(this.stalk_height_cur/15);
         var flower_tri_base_x = this.stalk_x;
@@ -259,7 +262,7 @@ function generate_art(input_seed) {
         this.flower_svg.setAttribute("points", triangle_def);
         var rotation_ctr_x = flower_tri_base_x;
         var rotation_ctr_y = flower_tri_base_y;
-        this.flower_svg.setAttribute("transform", "rotate("+this.flower_rotation+", "+rotation_ctr_x+", "+rotation_ctr_y+")")
+        this.flower_svg.setAttribute("transform", "rotate("+this.flower_rotation_cur+", "+rotation_ctr_x+", "+rotation_ctr_y+")")
       }
     };
     this.updateDef();
