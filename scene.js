@@ -200,10 +200,10 @@ function generate_art(input_seed) {
   // draw some plant stalks
   var max_stalks = Math.ceil(canvas_w / 500 * Math.log(1 + input_seed/100));
   var num_stalks = 0;
-  var stalk_y_min = Math.ceil(star_max_y*1.1);
+  var stalk_y_min = Math.ceil(star_max_y*0.9);
   var stalk_y_max = canvas_h;
   var stalk_height_min = Math.floor(canvas_h*0.1);
-  var stalk_height_max = Math.ceil(canvas_h*0.3);
+  var stalk_height_max = Math.ceil(canvas_h*0.4);
   // define Plant class
   function Plant() {
     var self = this;
