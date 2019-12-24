@@ -1,5 +1,11 @@
 // input prompt-text:
 function init_inputs() {
+  // parse query string, if available
+  var qd = {};
+  if(window.location.search) {
+    window.location.search.substr(1).split("&").forEach(function(item) {var s = item.split("="), k = s[0], v = s[1] && decodeURIComponent(s[1]); (qd[k] = qd[k] || []).push(v)})
+  }
+  // set up event handlers
   $('input[type="text"]').click(function() {
     if(typeof $(this).attr('data-prompt') == 'undefined') {
       $(this).attr('data-prompt', $(this).val());
@@ -13,6 +19,11 @@ function init_inputs() {
       $(this).val($(this).attr('data-prompt'));
     }
   });
+  // check query string for pre-defined seed
+  if('seed' in qd) {
+    $('#seed').val(qd['seed']);
+    doit();
+  }
 }
 
 //ref: https://gist.github.com/blixt/f17b47c62508be59987b
