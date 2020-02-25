@@ -1,12 +1,16 @@
 TODO - PLANTS
+- cardinality: flowers/plants (branches based on divisibility of number - 2, 3, 4, 5, 6, 7, 8)
+- nodes have children: nodes can have stalks or nodes as children
+- concave/convex: nodes can have concave/convex sides
+- stalk->stalk: stalks can have other stalks as children
 - let plant stalks drift (only b1,b2,top)
-- flowers/plants (branches based on divisibility of number - 2, 3, 4, 5, 6, 7, 8)
 TODO - STARS
 - distribute stars - less lower down
 - color some stars randomly
 - blink some stars
 
 DONE:
+- refactor to prep for fractal plants
 - ensure z-order by sorting elements and adding back to front
 - rotate flowers
 - validate input number
@@ -37,3 +41,7 @@ EXHIBITION IDEAS:
 - render the same seed across time, each git commit, or key stills thereof
 - render various clusters of seeds, e.g. 1-10, 10,20,30,40,50, etc.
 - give away digitally signed copy (usb + hash certificate ?)
+
+SPIN-OFFS:
+- fractal tree (single) creator with buttons/slides controls
+- one plant with many stalks
