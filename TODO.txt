@@ -1,8 +1,7 @@
 TODO - PLANTS
-- cardinality: flowers/plants (branches based on divisibility of number - 2, 3, 4, 5, 6, 7, 8)
 - nodes have children: nodes can have stalks or nodes as children
+- cardinality: flowers/plants (branches based on divisibility of number - 2, 3, 4, 5, 6, 7, 8)
 - concave/convex: nodes can have concave/convex sides
-- stalk->stalk: stalks can have other stalks as children
 - let plant stalks drift (only b1,b2,top)
 TODO - STARS
 - distribute stars - less lower down

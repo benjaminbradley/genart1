@@ -47,6 +47,7 @@ function randInt(max) {
 // minimum per-invocation change of 1 ensures that cur_val will eventually reach final_val, no matter how small the factor
 // max value checks ensure that cur_value will never pass final_val
 function moveToward(init_val, cur_val, final_val, factor) {
+  if(cur_val == null) return init_val;
   val_range = Math.abs(final_val - init_val);
   rel_val= Math.abs(cur_val - init_val);
   if(final_val < init_val) factor *= -1;
@@ -203,6 +204,7 @@ function generate_art(input_seed) {
   var stalk_y_max = canvas_h;
   var stalk_height_min = Math.floor(canvas_h*0.1);
   var stalk_height_max = Math.ceil(canvas_h*0.4);
+  var minimum_stalk_length = 10;
 
   // define Point class
   function Point(_x, _y) {
@@ -217,7 +219,7 @@ function generate_art(input_seed) {
     this.plant = _plant;
     this.parent = _parent;
     this.child_index = _child_index;
-
+    this.depth = this.parent.depth + 1;
     this.get_child_base_point = function(_child_index) {
       //TODO(nodes have children): determine child base points based on vertices of the node
       return this.base_point;
@@ -237,6 +239,9 @@ function generate_art(input_seed) {
       // when inserting elements, insert children first
       //TODO(nodes have children): insert child structures foreach(child in this.children) child.insertSvgHierarchy(svg, i);
       svg.insertBefore(this.flower_svg, svg.childNodes[i]);
+    }
+    this.has_node = function() {
+      return true;
     }
 
     // create child structures
@@ -288,15 +293,15 @@ function generate_art(input_seed) {
     this.plant = _plant;
     this.parent = _parent;
     this.child_index = _child_index;
+    this.depth = this.parent.depth + 1;
     this.get_child_base_point = function(_child_index) {
       // all children of the Stalk share the same origin point
       var base_x = this.stalk_x;
-      var base_y = this.stalk_top_y_cur - Math.floor(this.stalk_height_cur/15);
+      var base_y = this.stalk_top_y_cur;
       return new Point(base_x, base_y);
     }
     this.get_child_base_dir = function(_child_index) {
-      //TODO(stalk->stalk): make this variable based parent dir?
-      return 0;
+      return this.parent.get_child_base_dir(0);
     }
     this.cur_size = function() {
       return this.stalk_height_cur;
@@ -304,52 +309,51 @@ function generate_art(input_seed) {
     this.appendSvgHierarchy = function(svg) {
       // when appending svgs, append self first
       svg.appendChild(this.stalk_svg);
-      this.child.appendSvgHierarchy(svg);
+      if(this.child)
+        this.child.appendSvgHierarchy(svg);
     }
     this.insertSvgHierarchy = function(svg, i) {
       // when inserting elements, insert children first
-      this.child.insertSvgHierarchy(svg, i);
+      if(this.child)
+        this.child.insertSvgHierarchy(svg, i);
       svg.insertBefore(this.stalk_svg, svg.childNodes[i]);
     }
-    
-    this.stalk_svg = document.createElementNS("http://www.w3.org/2000/svg", "path");
-    this.base_point = this.parent.get_child_base_point(this.child_index);
-    this.stalk_x = this.base_point.x;
-    this.stalk_height_final = _stalk_height;
-    this.stalk_height_init = 10;
-    this.stalk_height_cur = this.stalk_height_init;
-    var stalk_bez_xrange = this.stalk_height_final;
-    this.stalk_bottom_y = this.base_point.y;
-    this.stalk_top_y_final = this.stalk_bottom_y-this.stalk_height_final;
-    this.stalk_top_y_init = this.stalk_bottom_y-this.stalk_height_cur;
-    this.stalk_top_y_cur = this.stalk_top_y_init;
-    this.stalk_b1_x_final = this.stalk_x+randInt(stalk_bez_xrange)-Math.floor(stalk_bez_xrange/2);
-    this.stalk_b1_x_init = this.stalk_x;
-    this.stalk_b1_x_cur = this.stalk_b1_x_init;
-    this.stalk_b1_y_final = this.stalk_bottom_y-randInt(this.stalk_height_final);
-    this.stalk_b1_y_init = this.stalk_bottom_y;
-    this.stalk_b1_y_cur = this.stalk_b1_y_init;
-    this.stalk_b2_x_final = this.stalk_x+randInt(stalk_bez_xrange)-Math.floor(stalk_bez_xrange/2);
-    this.stalk_b2_x_init = this.stalk_x;
-    this.stalk_b2_x_cur = this.stalk_b2_x_init;
-    this.stalk_b2_y_final = this.stalk_top_y_final+randInt(this.stalk_height_final)-Math.floor(this.stalk_height_final/2);
-    this.stalk_b2_y_init = this.stalk_top_y_cur;
-    this.stalk_b2_y_cur = this.stalk_b2_y_init;
-    if(this.plant.stalk_color == null) {
-      this.plant.stalk_color = secondary_colors[randInt(secondary_colors.length)];
+    this.has_node = function() {
+      return this.parent.has_node();
     }
+
+    this.stalk_svg = document.createElementNS("http://www.w3.org/2000/svg", "path");
     this.stalk_svg.setAttribute("stroke", this.plant.stalk_color);
     this.stalk_svg.setAttribute("fill", 'transparent');
     this.stalk_svg.setAttribute("style", 'stroke-width:3px');
-
-    // create child structures
-    //TODO(stalk->stalk): child can be either a stalk or a node
-    this.child = new Node(self.plant, self, 0);
+    this.stalk_height_final = _stalk_height;
+    this.stalk_height_init = 10;
+    var stalk_bez_xrange = this.stalk_height_final;
+    this.stalk_b1_dx = randInt(stalk_bez_xrange)-Math.floor(stalk_bez_xrange/2);
+    this.stalk_b2_dx = randInt(stalk_bez_xrange)-Math.floor(stalk_bez_xrange/2);
+    this.stalk_b1_x_cur = null;
+    this.stalk_b1_y_cur = null;
+    this.stalk_b2_x_cur = null;
+    this.stalk_b2_y_cur = null;
 
     // calculate initial dimensions and do initial render
     this.updateDef = function() {
       this.stalk_height_cur = moveToward(this.stalk_height_init, this.stalk_height_cur, this.stalk_height_final, 1.1);
-      var stalk_bez_xrange = this.stalk_height_cur;
+
+      this.base_point = this.parent.get_child_base_point(this.child_index);
+      this.stalk_x = this.base_point.x;
+      this.stalk_bottom_y = this.base_point.y;
+      this.stalk_top_y_final = this.stalk_bottom_y-this.stalk_height_final;
+      this.stalk_top_y_init = this.stalk_bottom_y-this.stalk_height_cur;
+      this.stalk_b1_x_final = this.stalk_x+this.stalk_b1_dx;
+      this.stalk_b1_x_init = this.stalk_x;
+      this.stalk_b1_y_final = this.stalk_bottom_y-randInt(this.stalk_height_final);
+      this.stalk_b1_y_init = this.stalk_bottom_y;
+      this.stalk_b2_x_final = this.stalk_x+this.stalk_b2_dx;
+      this.stalk_b2_x_init = this.stalk_x;
+      this.stalk_b2_y_final = this.stalk_top_y_final+randInt(this.stalk_height_final)-Math.floor(this.stalk_height_final/2);
+      this.stalk_b2_y_init = this.stalk_top_y_cur;
+
       this.stalk_top_y_cur = this.stalk_bottom_y-this.stalk_height_cur;
       this.stalk_b1_x_cur = moveToward(this.stalk_b1_x_init, this.stalk_b1_x_cur, this.stalk_b1_x_final, 1.01);
       this.stalk_b1_y_cur = moveToward(this.stalk_b1_y_init, this.stalk_b1_y_cur, this.stalk_b1_y_final, 1.05);
@@ -362,9 +366,24 @@ function generate_art(input_seed) {
         ','+this.stalk_x+','+this.stalk_top_y_cur;
       this.stalk_svg.setAttribute("d", stalk_def);
       this.stalk_svg.setAttribute("data-base-y", this.stalk_bottom_y);
-      this.child.updateDef();
+      if(this.child)
+        this.child.updateDef();
     }
     this.updateDef();
+
+    if(randInt(this.depth) == 0) {
+      // create child structures
+      var child_type = randInt(2);
+      if(child_type == 0) {
+        this.child = new Node(self.plant, self, 0);
+      } else {
+        var child_stalk_height = Math.floor(this.stalk_height_final/3) + randInt(Math.floor(this.stalk_height_final/3));
+        this.child = new Stalk(self.plant, self, 0, child_stalk_height);
+      }
+    } else if(!this.has_node()) {
+      // always make sure each plant includes at least one node
+      this.child = new Node(self.plant, self, 0);
+    }
   }//end of Stalk()
 
   // define Plant class
@@ -374,7 +393,8 @@ function generate_art(input_seed) {
     this.base_x = randInt(canvas_w);
     base_stalk_height = randInt(stalk_height_max-stalk_height_min)+stalk_height_min;
     this.base_y = stalk_y_min + Math.floor(base_stalk_height * 0.75) + randInt(Math.floor(base_stalk_height / 2));
-    this.stalk_color = null;
+    this.stalk_color = secondary_colors[randInt(secondary_colors.length)];
+    this.depth = 0;
     this.get_child_base_point = function(_child_index) {
       // only one base point for the plant for all children
       return new Point(this.base_x, this.base_y);
@@ -387,6 +407,9 @@ function generate_art(input_seed) {
     }
     this.updateDef = function() {
       this.stalk.updateDef();
+    }
+    this.has_node = function() {
+      return false;
     }
 
     // create child structures
@@ -403,14 +426,12 @@ function generate_art(input_seed) {
         if(this_base_y < child_base_y) {
           svgs_inserted = true;
           this.stalk.insertSvgHierarchy(svg, i);
-          console.log("inserting "+this_base_y+" before "+child_base_y);
           break;
         }
       }
     }
     if(!svgs_inserted) {
       this.stalk.appendSvgHierarchy(svg);
-      console.log(this_base_y+" not inserted, appending");
     }
     // define evolution function
     this.evolve = function() {
