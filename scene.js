@@ -132,29 +132,41 @@ window.onload = function() {
   });
 }
 
+// GLOBAL CONSTANTS
+var CARDINALITIES = [3,4,5,6,7,8];
+var star_min_height_pct = 0.6;
+var star_appearance_freq_ms = 3000;
+var color_palette_dict = [
+  ['#b2b2b2', '#50394c', '#f4e1d2', '#ffef96'],
+  ['#80ced6', '#d5f4e6', '#fefbd8', '#618685'],
+  ['#034f84', '#92a8d1', '#f7cac9', '#f7786b'],
+  ['#4040a1', '#36486b', '#618685', '#fefbd8'],
+  ['#6b5b95', '#878f99', '#a2b9bc', '#b2ad7f'],
+  ['#622569', '#b8a9c9', '#d6d4e0', '#5b9aa0'],
+  ['#c83349', '#e06377', '#eeac99', '#f9d5e5'],
+  ['#ff7b25', '#d64161', '#6b5b95', '#feb236'],
+  ['#d96459', '#f2ae72', '#588c7e', '#f2e394'],
+  ['#b2ad7f', '#878f99', '#a2b9bc', '#6b5b95']
+];
+var min_child_size = 5;
+
 function generate_art(input_seed) {
-  // GLOBAL CONSTANTS
+  // art-specific constants
   var max_stars = 4 * Math.log(10 + Math.abs(input_seed));
-  var star_min_height_pct = 0.6;
-  var star_appearance_freq_ms = 3000;
   var color_palette_index = input_seed % 10;
-  var color_palette_dict = [
-    ['#b2b2b2', '#50394c', '#f4e1d2', '#ffef96'],
-    ['#80ced6', '#d5f4e6', '#fefbd8', '#618685'],
-    ['#034f84', '#92a8d1', '#f7cac9', '#f7786b'],
-    ['#4040a1', '#36486b', '#618685', '#fefbd8'],
-    ['#6b5b95', '#878f99', '#a2b9bc', '#b2ad7f'],
-    ['#622569', '#b8a9c9', '#d6d4e0', '#5b9aa0'],
-    ['#c83349', '#e06377', '#eeac99', '#f9d5e5'],
-    ['#ff7b25', '#d64161', '#6b5b95', '#feb236'],
-    ['#d96459', '#f2ae72', '#588c7e', '#f2e394'],
-    ['#b2ad7f', '#878f99', '#a2b9bc', '#6b5b95']
-  ];
   var color_palette = color_palette_dict[color_palette_index];
   var bg_color = color_palette[0];
   var secondary_colors = color_palette.slice(1,3);
   var highlight_color = color_palette[3];
-  var min_child_size = 5;
+  var input_cardinalities = [];
+  for(var i=0; i<CARDINALITIES.length; i++) {
+    if(input_seed % CARDINALITIES[i] == 0) {
+      input_cardinalities.push(CARDINALITIES[i]);
+    }
+  }
+  if(input_cardinalities.length == 0) {
+    input_cardinalities = CARDINALITIES;
+  }
 
   // show input seed in title
   var init_title = $(document).attr("title");
@@ -208,7 +220,6 @@ function generate_art(input_seed) {
   bg.setAttribute("height","100%");
   bg.setAttribute("fill","url(#bg-grad)");
   svg.appendChild(bg);
-
 
   // draw some stars
   var star_max_y = star_min_height_pct*canvas_h;
@@ -344,28 +355,27 @@ function generate_art(input_seed) {
     this.updateDef = function() {
       this.initialize();
       this.flower_rotation_cur = moveToward(this.flower_rotation_init, this.flower_rotation_cur, this.flower_rotation_final, 1.1);
-      if(this.plant.cardinality == 3) { // triangular nodes
-        this.base_point = this.parent.get_child_base_point(this.child_index);
-        var flower_tri_base_y = this.base_point.y;
-        var flower_tri_base_x = this.base_point.x;
-        this.flower_tri_side = Math.ceil(this.parent.cur_size() / 2);
-        var botlt_x = flower_tri_base_x - Math.floor(this.flower_tri_side/2);
-        var botlt_y = flower_tri_base_y;
-        var botrt_x = flower_tri_base_x + Math.floor(this.flower_tri_side/2);
-        var botrt_y = flower_tri_base_y;
-        var top_x = flower_tri_base_x;
-        var top_y = flower_tri_base_y - this.flower_tri_side;
-        var triangle_def = botlt_x+','+botlt_y+' '+botrt_x+','+botrt_y+' '+top_x+','+top_y;
-        this.flower_svg.setAttribute("points", triangle_def);
-        var rotation_ctr_x = flower_tri_base_x;
-        var rotation_ctr_y = flower_tri_base_y;
-        var base_dir = this.parent.get_child_base_dir(this.child_index);
-        var node_rotation = this.flower_rotation_cur + base_dir;
-        this.flower_svg.setAttribute("transform", "rotate("+node_rotation+", "+rotation_ctr_x+", "+rotation_ctr_y+")");
-        this.vertices[0] = rotate(rotation_ctr_x,rotation_ctr_y, top_x,top_y, node_rotation);
-        this.vertices[1] = rotate(rotation_ctr_x,rotation_ctr_y, botrt_x,botrt_y, node_rotation);
-        this.vertices[2] = rotate(rotation_ctr_x,rotation_ctr_y, botlt_x,botlt_y, node_rotation);
+      this.base_point = this.parent.get_child_base_point(this.child_index);
+      var base_dir = this.parent.get_child_base_dir(this.child_index);
+      var node_rotation = this.flower_rotation_cur + base_dir;
+      // calculate vertices for a regular polygon with # sides = cardinality
+      var pointlist = [];
+      var poly_def = "";
+      for(var i=this.plant.cardinality-1; i>=0; i--) {
+        var r = Math.ceil(this.parent.cur_size() / 3);
+        var theta = 2 * Math.PI * i / this.plant.cardinality;
+        var vx = this.base_point.x + Math.ceil(r * Math.cos(theta));
+        var vy = this.base_point.y + Math.ceil(r * Math.sin(theta));
+        pointlist.push(new Point(vx, vy));
+        if(poly_def != "") { poly_def+=' '; }
+        poly_def += vx+','+vy
+        this.vertices[(i+1)%this.plant.cardinality] = rotate(this.base_point.x,this.base_point.y, vx,vy, node_rotation)
       }
+      this.flower_svg.setAttribute("points", poly_def);
+      var rotation_ctr_x = this.base_point.x;
+      var rotation_ctr_y = this.base_point.y;
+      this.flower_svg.setAttribute("transform", "rotate("+node_rotation+", "+rotation_ctr_x+", "+rotation_ctr_y+")");
+
       this.init_children();
       for(var i=0; i<this.children.length; i++) {
         this.children[i].updateDef();
@@ -552,8 +562,7 @@ function generate_art(input_seed) {
     this.depth = 0;
     this.id = "P"+num_plants;
     num_plants++;
-    //TODO(cardinality): select plant.cardinality based on input seed
-    this.cardinality = 3;
+    this.cardinality = input_cardinalities[randInt(input_cardinalities.length)];
     this.get_at_depth = function(_depth) {
       if(_depth == this.depth) {
         return this;

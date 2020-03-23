@@ -1,5 +1,4 @@
 TODO - PLANTS
-- cardinality: flowers/plants (branches based on divisibility of number - 2, 3, 4, 5, 6, 7, 8)
 - concave/convex: nodes can have concave/convex sides
 - let plant stalks drift (only b1,b2,top)
 TODO - STARS
@@ -10,6 +9,8 @@ TODO - UI
 - listen for up/down keys to page through random seeds
 
 DONE:
+- flowers/plants have cardinality based on divisibility of number (3, 4, 5, 6, 7, 8)
+- nodes can have stalks or nodes as children
 - refactor to prep for fractal plants
 - ensure z-order by sorting elements and adding back to front
 - rotate flowers
