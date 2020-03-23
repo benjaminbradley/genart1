@@ -42,23 +42,43 @@ function randInt(max) {
   return Math.floor(max*rand.nextFloat());
 }
 
+// define Point class
+function Point(_x, _y) {
+  this.x = _x;
+  this.y = _y;
+}
+
+function rotate(cx, cy, x, y, angle) {
+    var radians = (Math.PI / 180) * -angle,
+    cos = Math.cos(radians),
+    sin = Math.sin(radians),
+    nx = Math.floor((cos * (x - cx)) + (sin * (y - cy)) + cx),
+    ny = Math.floor((cos * (y - cy)) - (sin * (x - cx)) + cy);
+    return new Point(nx, ny);
+}
+
 // this function evolves a numerical value from init_val to final_val via a given percentage change factor
 // positive factor will effect accelerating growth, negative factor = decelerating
 // minimum per-invocation change of 1 ensures that cur_val will eventually reach final_val, no matter how small the factor
 // max value checks ensure that cur_value will never pass final_val
 function moveToward(init_val, cur_val, final_val, factor) {
+  // initialize current value if needed
   if(cur_val == null) return init_val;
-  val_range = Math.abs(final_val - init_val);
-  rel_val= Math.abs(cur_val - init_val);
+  // establish absolute ranges and relative values
+  var val_range = Math.abs(final_val - init_val);
+  var rel_val = Math.abs(cur_val - init_val);
   if(final_val < init_val) factor *= -1;
-  rel_newval = Math.ceil(rel_val * factor);
+  // calculate the new value
+  var rel_newval = Math.ceil(rel_val * factor);
   var orig = cur_val;
-  new_val = init_val + rel_newval;
+  var new_val = init_val + rel_newval;
+  // check for overshoot
   if(factor > 0 && new_val > final_val) {
     new_val = final_val;
   } else if(factor < 0 && new_val < final_val) {
     new_val = final_val;
   }
+  // apply minimum change
   if(orig == new_val && new_val != final_val) {
     new_val += (factor < 0 ? -1 : 1);
   }
@@ -134,6 +154,7 @@ function generate_art(input_seed) {
   var bg_color = color_palette[0];
   var secondary_colors = color_palette.slice(1,3);
   var highlight_color = color_palette[3];
+  var min_child_size = 5;
 
   // show input seed in title
   var init_title = $(document).attr("title");
@@ -151,21 +172,33 @@ function generate_art(input_seed) {
 
   // set up background gradient
   var defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
-  var bg_grad = document.createElementNS("http://www.w3.org/2000/svg", "linearGradient");
-  bg_grad.setAttribute("id","bg-grad");
-  bg_grad.setAttribute("x1","0%");
-  bg_grad.setAttribute("y1","0%");
-  bg_grad.setAttribute("x2","0%");
-  bg_grad.setAttribute("y2","100%");
-  var stop1 = document.createElementNS("http://www.w3.org/2000/svg", "stop");
-  stop1.setAttribute("offset","30%");
-  stop1.setAttribute("stop-color","black");
-  bg_grad.appendChild(stop1);
-  var stop2 = document.createElementNS("http://www.w3.org/2000/svg", "stop");
-  stop2.setAttribute("offset","100%");
-  stop2.setAttribute("stop-color", bg_color);
-  bg_grad.appendChild(stop2);
-  defs.appendChild(bg_grad);
+    var bg_grad = document.createElementNS("http://www.w3.org/2000/svg", "linearGradient");
+      bg_grad.setAttribute("id","bg-grad");
+      bg_grad.setAttribute("x1","0%");
+      bg_grad.setAttribute("y1","0%");
+      bg_grad.setAttribute("x2","0%");
+      bg_grad.setAttribute("y2","100%");
+      var stop1 = document.createElementNS("http://www.w3.org/2000/svg", "stop");
+        stop1.setAttribute("offset","30%");
+        stop1.setAttribute("stop-color","black");
+      bg_grad.appendChild(stop1);
+      var stop2 = document.createElementNS("http://www.w3.org/2000/svg", "stop");
+        stop2.setAttribute("offset","100%");
+        stop2.setAttribute("stop-color", bg_color);
+      bg_grad.appendChild(stop2);
+    defs.appendChild(bg_grad);
+  //<filter id="shadow" x="0" y="0" width="200%" height="200%">
+    var shadowfilter = document.createElementNS("http://www.w3.org/2000/svg", "filter");
+      shadowfilter.setAttribute("id", "shadow");
+      //  <feDropShadow dx="40" dy="40" stdDeviation="35" flood-color="#ff0000" flood-opacity="1" />
+      var feDropShadow = document.createElementNS("http://www.w3.org/2000/svg", "feDropShadow");
+        feDropShadow.setAttribute("dx", 6);
+        feDropShadow.setAttribute("dy", 6);
+        feDropShadow.setAttribute("stdDeviation", 2);
+        feDropShadow.setAttribute("flood-color", "#444");
+        feDropShadow.setAttribute("flood-opacity", 0.4);
+      shadowfilter.appendChild(feDropShadow);
+    defs.appendChild(shadowfilter);
   svg.appendChild(defs);
 
   var bg = document.createElementNS("http://www.w3.org/2000/svg", "rect");
@@ -179,20 +212,29 @@ function generate_art(input_seed) {
 
   // draw some stars
   var star_max_y = star_min_height_pct*canvas_h;
+  var star_points = [];
+  var star_delay = [];
   var num_stars = 0;
+  // pregenerate stars to make timing more reliable
+  for(var i=0; i<max_stars; i++) {
+    var star_y = randInt(star_max_y)
+    var star_x = randInt(canvas_w);
+    star_points.push(new Point(star_x, star_y));
+    star_delay.push(randInt(star_appearance_freq_ms))
+  }
   function makeStar() {
     var star = document.createElementNS("http://www.w3.org/2000/svg", "text");
     star.textContent = ".";
-    var star_y = randInt(star_max_y);
+    var star_y = star_points[num_stars].y;
     var star_opacity = (star_max_y-star_y) / star_max_y;
-    star.setAttribute("x", randInt(canvas_w));
+    star.setAttribute("x", star_points[num_stars].x);
     star.setAttribute("y", star_y);
     star.setAttribute("opacity", star_opacity);
     star.setAttribute("fill", 'white');
     svg.appendChild(star);
     num_stars++;
     if(num_stars < max_stars) {
-      setTimeout(makeStar, getDelay(randInt(star_appearance_freq_ms)));
+      setTimeout(makeStar, getDelay(star_delay[num_stars]));
     }
   }
   makeStar();
@@ -206,12 +248,6 @@ function generate_art(input_seed) {
   var stalk_height_max = Math.ceil(canvas_h*0.4);
   var minimum_stalk_length = 10;
 
-  // define Point class
-  function Point(_x, _y) {
-    this.x = _x;
-    this.y = _y;
-  }
-
   // define Node class
   function Node(_plant, _parent, _child_index) {
     var self = this;
@@ -220,91 +256,170 @@ function generate_art(input_seed) {
     this.parent = _parent;
     this.child_index = _child_index;
     this.depth = this.parent.depth + 1;
+    this.id = this.parent.id + "N"+this.child_index;
+    console.log("new Node("+_child_index+": depth="+this.depth+")")
+    this.vertices = [];
+    this.children = [];
+    this.get_at_depth = function(_depth) {
+      if(_depth == this.depth) {
+        return this;
+      } else {
+        if(this.children.length > 0) {
+          return this.children[0].get_at_depth(_depth);
+        }
+      }
+    }
     this.get_child_base_point = function(_child_index) {
-      //TODO(nodes have children): determine child base points based on vertices of the node
-      return this.base_point;
+      return this.vertices[_child_index];
     }
     this.get_child_base_dir = function(_child_index) {
-      //TODO(nodes have children): set base dir based on vertices of the node, modified by parent's dir
-      return 0;
+      // set base dir based on vertices of the node, modified by parent's dir
+      var each_child_dir = Math.floor(360 / this.plant.cardinality);
+      var child_base_dir = this.flower_rotation_cur + each_child_dir * _child_index;
+      return child_base_dir;
     }
     this.cur_size = function() {
       return this.flower_tri_side;
     }
+    this.final_size = function() {
+      return Math.ceil(this.parent.final_size() / 2);
+    }
     this.appendSvgHierarchy = function(svg) {
       svg.appendChild(this.flower_svg);
-      //TODO(nodes have children): append child structures foreach(child in this.children) child.appendSvgHierarchy(svg);
+      for(var i=0; i<this.children.length; i++) {
+        this.children[i].appendSvgHierarchy(svg);
+      }
     }
-    this.insertSvgHierarchy = function(svg, i) {
+    this.insertSvgHierarchy = function(svg, j) {
       // when inserting elements, insert children first
-      //TODO(nodes have children): insert child structures foreach(child in this.children) child.insertSvgHierarchy(svg, i);
-      svg.insertBefore(this.flower_svg, svg.childNodes[i]);
+      for(var i=0; i<this.children.length; i++) {
+        this.children[i].insertSvgHierarchy(svg, j);
+      }
+      svg.insertBefore(this.flower_svg, svg.childNodes[j]);
     }
     this.has_node = function() {
       return true;
     }
 
-    // create child structures
-    //TODO(nodes have children)
+    this.initialized = false;
+    this.initialize = function() {
+      if(this.initialized) { return; }
+      this.initialized = true;
+      var base_dir = this.parent.get_child_base_dir(this.child_index);
+      
+      // check if plant already has segments at this depth
+      var sibling = this.plant.get_at_depth(this.depth);
+      if(sibling && sibling != this) {
+        // initialize from sibling
+        this.child_size = sibling.child_size;
+        this.flower_rotation_final = sibling.flower_rotation_final;
+        //TODO(concave/convex): add concave/convex attribute for nodes
+      } else {
+        // generate random attributes for this segment
+        if(this.final_size() > min_child_size && randInt(this.depth) == 0) {
+          this.child_size = Math.ceil(this.final_size() / (1+randInt(3)));
+        } else {
+          this.child_size = null;
+        }
+        this.flower_rotation_final = randInt(360) - 180;
+        //TODO(concave/convex): add concave/convex attribute for nodes
+      }
+      // calculate initial dimensions and do initial render
+      this.flower_rotation_init = base_dir;
+      this.flower_rotation_cur = this.flower_rotation_init;
+    }
 
-    // calculate initial dimensions and do initial render
-    //TODO(cardinality): adapt flower_style to plant.cardinality
-    this.flower_style = 1;
-    //TODO(concave/convex): add concave/convex attribute for nodes
+    // create and initialize SVG element for this segment
     this.flower_svg = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
-    base_dir = this.parent.get_child_base_dir(this.child_index);
-    this.flower_rotation_final = base_dir - 180 + randInt(360);
-    this.flower_rotation_init = base_dir;
-    this.flower_rotation_cur = this.flower_rotation_init;
+    this.flower_svg.setAttribute("id", this.id);
     this.flower_svg.setAttribute("style",
-      "fill:"+highlight_color+
-      ";stroke:"+this.plant.stalk_color+
-      ";stroke-width:3px;fill-rule:nonzero;"
+       "fill:"+highlight_color+";"
+      +"stroke:"+this.plant.stalk_color+";"
+      +"stroke-width:3px;fill-rule:nonzero;"
+      +"filter:url(#shadow);"
     );
+
     this.flower_svg.setAttribute("data-base-y", this.plant.base_y);
 
     this.updateDef = function() {
+      this.initialize();
       this.flower_rotation_cur = moveToward(this.flower_rotation_init, this.flower_rotation_cur, this.flower_rotation_final, 1.1);
-      if(this.flower_style == 1) { // triangular nodes
+      if(this.plant.cardinality == 3) { // triangular nodes
         this.base_point = this.parent.get_child_base_point(this.child_index);
         var flower_tri_base_y = this.base_point.y;
         var flower_tri_base_x = this.base_point.x;
-        var flower_tri_side = Math.ceil(this.parent.cur_size() / 4);
-        var botlt_x = flower_tri_base_x - Math.floor(flower_tri_side/2);
+        this.flower_tri_side = Math.ceil(this.parent.cur_size() / 2);
+        var botlt_x = flower_tri_base_x - Math.floor(this.flower_tri_side/2);
         var botlt_y = flower_tri_base_y;
-        var botrt_x = flower_tri_base_x + Math.floor(flower_tri_side/2);
+        var botrt_x = flower_tri_base_x + Math.floor(this.flower_tri_side/2);
         var botrt_y = flower_tri_base_y;
         var top_x = flower_tri_base_x;
-        var top_y = flower_tri_base_y - flower_tri_side;
+        var top_y = flower_tri_base_y - this.flower_tri_side;
         var triangle_def = botlt_x+','+botlt_y+' '+botrt_x+','+botrt_y+' '+top_x+','+top_y;
         this.flower_svg.setAttribute("points", triangle_def);
         var rotation_ctr_x = flower_tri_base_x;
         var rotation_ctr_y = flower_tri_base_y;
-        this.flower_svg.setAttribute("transform", "rotate("+this.flower_rotation_cur+", "+rotation_ctr_x+", "+rotation_ctr_y+")");
+        var base_dir = this.parent.get_child_base_dir(this.child_index);
+        var node_rotation = this.flower_rotation_cur + base_dir;
+        this.flower_svg.setAttribute("transform", "rotate("+node_rotation+", "+rotation_ctr_x+", "+rotation_ctr_y+")");
+        this.vertices[0] = rotate(rotation_ctr_x,rotation_ctr_y, top_x,top_y, node_rotation);
+        this.vertices[1] = rotate(rotation_ctr_x,rotation_ctr_y, botrt_x,botrt_y, node_rotation);
+        this.vertices[2] = rotate(rotation_ctr_x,rotation_ctr_y, botlt_x,botlt_y, node_rotation);
+      }
+      this.init_children();
+      for(var i=0; i<this.children.length; i++) {
+        this.children[i].updateDef();
       }
     };
-    this.updateDef();
+
+    this.children_initialized = false;
+    this.init_children = function() {
+      if(this.children_initialized) { return; }
+      this.children_initialized = true;
+      // create child structures
+      this.children = [];
+      if(this.child_size) {
+        for(var i=0; i<this.plant.cardinality; i++) {
+          this.children.push(new Stalk(this.plant, this, i, this.child_size));
+        }
+      }
+    }
   }
 
   // define Stalk class
-  function Stalk(_plant, _parent, _child_index, _stalk_height) {
+  function Stalk(_plant, _parent, _child_index, _stalk_height_final) {
     var self = this;
     // declare and initialize instance attributes and methods
     this.plant = _plant;
     this.parent = _parent;
     this.child_index = _child_index;
     this.depth = this.parent.depth + 1;
+    this.id = this.parent.id + "S"+this.child_index;
+    this.stalk_height_final = _stalk_height_final;
+    console.log("new Stalk("+_child_index+": depth="+this.depth+")")
+    this.child = null;
+    this.get_at_depth = function(_depth) {
+      if(_depth == this.depth) {
+        return this;
+      } else {
+        if(this.child) {
+          return this.child.get_at_depth(_depth);
+        }
+      }
+    }
     this.get_child_base_point = function(_child_index) {
       // all children of the Stalk share the same origin point
-      var base_x = this.stalk_x;
-      var base_y = this.stalk_top_y_cur;
-      return new Point(base_x, base_y);
+      var stalk_dir = this.parent.get_child_base_dir(this.child_index);
+      return rotate(this.stalk_x,this.stalk_bottom_y, this.stalk_x,this.stalk_top_y_cur, stalk_dir);
     }
     this.get_child_base_dir = function(_child_index) {
-      return this.parent.get_child_base_dir(0);
+      return this.parent.get_child_base_dir(this.child_index);
     }
     this.cur_size = function() {
       return this.stalk_height_cur;
+    }
+    this.final_size = function() {
+      return this.stalk_height_final;
     }
     this.appendSvgHierarchy = function(svg) {
       // when appending svgs, append self first
@@ -322,24 +437,58 @@ function generate_art(input_seed) {
       return this.parent.has_node();
     }
 
+    this.initialized = false;
+    this.initialize = function() {
+      if(this.initialized) { return; }
+      this.initialized = true;
+      // check if plant already has segments at this depth
+      var sibling = this.plant.get_at_depth(this.depth);
+      if(sibling && sibling != this) {
+        // initialize from sibling
+        this.stalk_b1_dx = sibling.stalk_b1_dx;
+        this.stalk_b2_dx = sibling.stalk_b2_dx;
+        this.stalk_b1_dy = sibling.stalk_b1_dy;
+        this.stalk_b2_dy = sibling.stalk_b2_dy
+        this.child_type = sibling.child_type;
+        this.child_stalk_height = sibling.child_stalk_height;
+      } else {
+        // generate random attributes for this segment
+        var stalk_bez_xrange = this.stalk_height_final;
+        this.stalk_b1_dx = randInt(stalk_bez_xrange)-Math.floor(stalk_bez_xrange/2);
+        this.stalk_b2_dx = randInt(stalk_bez_xrange)-Math.floor(stalk_bez_xrange/2);
+        this.stalk_b1_dy = randInt(this.stalk_height_final);
+        this.stalk_b2_dy = randInt(this.stalk_height_final);
+        if(this.stalk_height_final > min_child_size && randInt(this.depth) == 0) {
+          this.child_type = randInt(2);
+          if(this.child_type == 1) {
+            this.child_stalk_height = Math.floor(this.stalk_height_final/3) + randInt(Math.floor(this.stalk_height_final/3));
+          }
+        } else {
+          this.child_type = null;
+        }
+      }
+      // initialize variables
+      this.stalk_height_init = 10;
+      this.stalk_b1_x_cur = null;
+      this.stalk_b1_y_cur = null;
+      this.stalk_b2_x_cur = null;
+      this.stalk_b2_y_cur = null;
+    }
+
+    // create and initialize SVG element for this segment
     this.stalk_svg = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    this.stalk_svg.setAttribute("id", this.id);
     this.stalk_svg.setAttribute("stroke", this.plant.stalk_color);
     this.stalk_svg.setAttribute("fill", 'transparent');
-    this.stalk_svg.setAttribute("style", 'stroke-width:3px');
-    this.stalk_height_final = _stalk_height;
-    this.stalk_height_init = 10;
-    var stalk_bez_xrange = this.stalk_height_final;
-    this.stalk_b1_dx = randInt(stalk_bez_xrange)-Math.floor(stalk_bez_xrange/2);
-    this.stalk_b2_dx = randInt(stalk_bez_xrange)-Math.floor(stalk_bez_xrange/2);
-    this.stalk_b1_x_cur = null;
-    this.stalk_b1_y_cur = null;
-    this.stalk_b2_x_cur = null;
-    this.stalk_b2_y_cur = null;
+    this.stalk_svg.setAttribute("style",
+      'stroke-width:3px;'
+      +"filter:url(#shadow);"
+    );
 
     // calculate initial dimensions and do initial render
     this.updateDef = function() {
+      this.initialize();
       this.stalk_height_cur = moveToward(this.stalk_height_init, this.stalk_height_cur, this.stalk_height_final, 1.1);
-
       this.base_point = this.parent.get_child_base_point(this.child_index);
       this.stalk_x = this.base_point.x;
       this.stalk_bottom_y = this.base_point.y;
@@ -347,11 +496,11 @@ function generate_art(input_seed) {
       this.stalk_top_y_init = this.stalk_bottom_y-this.stalk_height_cur;
       this.stalk_b1_x_final = this.stalk_x+this.stalk_b1_dx;
       this.stalk_b1_x_init = this.stalk_x;
-      this.stalk_b1_y_final = this.stalk_bottom_y-randInt(this.stalk_height_final);
+      this.stalk_b1_y_final = this.stalk_bottom_y-this.stalk_b1_dy;
       this.stalk_b1_y_init = this.stalk_bottom_y;
       this.stalk_b2_x_final = this.stalk_x+this.stalk_b2_dx;
       this.stalk_b2_x_init = this.stalk_x;
-      this.stalk_b2_y_final = this.stalk_top_y_final+randInt(this.stalk_height_final)-Math.floor(this.stalk_height_final/2);
+      this.stalk_b2_y_final = this.stalk_top_y_final+this.stalk_b2_dy-Math.floor(this.stalk_height_final/2);
       this.stalk_b2_y_init = this.stalk_top_y_cur;
 
       this.stalk_top_y_cur = this.stalk_bottom_y-this.stalk_height_cur;
@@ -366,27 +515,33 @@ function generate_art(input_seed) {
         ','+this.stalk_x+','+this.stalk_top_y_cur;
       this.stalk_svg.setAttribute("d", stalk_def);
       this.stalk_svg.setAttribute("data-base-y", this.stalk_bottom_y);
+      var stalk_dir = this.parent.get_child_base_dir(this.child_index);
+      this.stalk_svg.setAttribute("transform", "rotate("+stalk_dir+", "+this.stalk_x+", "+this.stalk_bottom_y+")");
+      this.init_children();
       if(this.child)
         this.child.updateDef();
     }
-    this.updateDef();
 
-    if(randInt(this.depth) == 0) {
-      // create child structures
-      var child_type = randInt(2);
-      if(child_type == 0) {
+    this.children_initialized = false;
+    this.init_children = function() {
+      if(this.children_initialized) { return; }
+      this.children_initialized = true;
+      if(this.child_type !== null) {
+        // create child structures
+        if(this.child_type == 0) {
+          this.child = new Node(self.plant, self, 0);
+        } else {
+          this.child = new Stalk(self.plant, self, 0, this.child_stalk_height);
+        }
+      } else if(!this.has_node()) {
+        // always make sure each plant includes at least one node
         this.child = new Node(self.plant, self, 0);
-      } else {
-        var child_stalk_height = Math.floor(this.stalk_height_final/3) + randInt(Math.floor(this.stalk_height_final/3));
-        this.child = new Stalk(self.plant, self, 0, child_stalk_height);
       }
-    } else if(!this.has_node()) {
-      // always make sure each plant includes at least one node
-      this.child = new Node(self.plant, self, 0);
     }
   }//end of Stalk()
 
   // define Plant class
+  var num_plants = 0;
   function Plant() {
     var self = this;
     // declare and initialize instance attributes and methods
@@ -395,6 +550,19 @@ function generate_art(input_seed) {
     this.base_y = stalk_y_min + Math.floor(base_stalk_height * 0.75) + randInt(Math.floor(base_stalk_height / 2));
     this.stalk_color = secondary_colors[randInt(secondary_colors.length)];
     this.depth = 0;
+    this.id = "P"+num_plants;
+    num_plants++;
+    //TODO(cardinality): select plant.cardinality based on input seed
+    this.cardinality = 3;
+    this.get_at_depth = function(_depth) {
+      if(_depth == this.depth) {
+        return this;
+      } else {
+        if(this.stalk) {
+          return this.stalk.get_at_depth(_depth);
+        }
+      }
+    }
     this.get_child_base_point = function(_child_index) {
       // only one base point for the plant for all children
       return new Point(this.base_x, this.base_y);
@@ -404,6 +572,9 @@ function generate_art(input_seed) {
     }
     this.cur_size = function() {
       return Math.ceil(this.stalk.cur_size() * 1.5);
+    }
+    this.final_size = function() {
+      return this.stalk.stalk_height_final;
     }
     this.updateDef = function() {
       this.stalk.updateDef();
@@ -438,10 +609,10 @@ function generate_art(input_seed) {
       self.updateDef();
       // continue updating if needed
       if(this.stalk.stalk_height_cur < this.stalk.stalk_height_final) {
-        setTimeout(function(){self.evolve();}, 100);
+        setTimeout(function(){self.evolve();}, getDelay(100));
       }
     };
-    setTimeout(function(){self.evolve();}, 100);
+    setTimeout(function(){self.evolve();}, getDelay(100));
 
   }
   function makePlant() {
