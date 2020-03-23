@@ -287,7 +287,8 @@ function generate_art(input_seed) {
       // set base dir based on vertices of the node, modified by parent's dir
       var each_child_dir = Math.floor(360 / this.plant.cardinality);
       var child_base_dir = this.flower_rotation_cur + each_child_dir * _child_index;
-      return child_base_dir;
+      var base_dir = this.parent.get_child_base_dir(this.child_index);
+      return base_dir + child_base_dir;
     }
     this.cur_size = function() {
       return this.flower_tri_side;
