@@ -5,10 +5,9 @@ TODO - STARS
 - distribute stars - less lower down
 - color some stars randomly
 - blink some stars
-TODO - UI
-- listen for up/down keys to page through random seeds
 
 DONE:
+- arrow keys page through random seeds
 - flowers/plants have cardinality based on divisibility of number (3, 4, 5, 6, 7, 8)
 - nodes can have stalks or nodes as children
 - refactor to prep for fractal plants

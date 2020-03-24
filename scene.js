@@ -97,9 +97,10 @@ function errorMessage(msg) {
   $('#message').html(msg);
 }
 
+var user_seed;
 function doit() {
   // get user input
-  var user_seed = $('#seed').val();
+  user_seed = $('#seed').val();
   // validate user input
   if(parseInt(user_seed) != user_seed) {
     errorMessage("Input must be a whole number");
@@ -113,11 +114,63 @@ function doit() {
   }
   errorMessage(""); // clear error message
   // if it's all good, generate some art!
-  rand = new Random(user_seed);
   // hide user input form
   $('#user-input').hide();
   setTimeout(function(){generate_art(user_seed);}, 200);  // initiate with a slight delay to give mobile devices time to hide the keyboard
 }
+
+function setQSvalue(key, value) {
+  var found = false;
+  var pairs = [];
+  var vars = window.location.search.substring(1).split('&');
+  for (var i = 0; i < vars.length; i++) {
+    var pair = vars[i].split('=');
+    if(pair[0] == key) { pair[1] = value; found = true; }
+    pairs.push(pair);
+  }
+  if(!found) {
+    pairs.push([key, value]);
+  }
+  var newqs = '?';
+  for (var i = 0; i < pairs.length; i++) {
+    if(newqs != '?') { newqs += '&'; }
+    newqs += pairs[i][0];
+    if(typeof pairs[i][1] != 'undefined') { newqs += '='+pairs[i][1]; }
+  }
+  return newqs;
+}
+
+document.addEventListener('keydown', function(event) {
+  var do_newart = false;
+  if (event.code == 'ArrowUp') {
+    user_seed += 1;
+    do_newart = true;
+  } else if (event.code == 'ArrowDown') {
+    user_seed -= 1;
+    if(user_seed < 0) { user_seed = 0; }
+    do_newart = true;
+  } else if (event.code == 'ArrowLeft') {
+    user_seed = user_seed * 10 + randInt(10);
+    do_newart = true;
+  } else if (event.code == 'ArrowRight') {
+    user_seed = Math.floor(user_seed/10);
+    if(user_seed < 0) { user_seed = 0; }
+    do_newart = true;
+  }
+  if(do_newart) {
+    window.history.pushState({seed: user_seed}, "Generative Art - 1 | SEED: "+user_seed, setQSvalue('seed', user_seed) );
+    // clear all timeouts for this art
+    clearTimeout(starTimeout);
+    for(var i=0; i<plants.length; i++) {
+      clearTimeout(plants[i].evolveTimeout);
+    }
+    clearTimeout(plantTimeout);
+    // remove old canvas
+    $('#svg_canvas').remove();
+    // generate new art
+    generate_art(user_seed);
+  }
+});
 
 
 window.onload = function() {
@@ -150,7 +203,12 @@ var color_palette_dict = [
 ];
 var min_child_size = 5;
 
+var starTimeout;
+var plantTimeout;
+var plants;
+
 function generate_art(input_seed) {
+  rand = new Random(input_seed);
   // art-specific constants
   var max_stars = 4 * Math.log(10 + Math.abs(input_seed));
   var color_palette_index = input_seed % 10;
@@ -174,6 +232,7 @@ function generate_art(input_seed) {
 
   // create svg
   var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute('id', 'svg_canvas');
   var canvas_w = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
   var canvas_h = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
   console.log("Canvas size: "+canvas_w+'x'+canvas_h);
@@ -245,7 +304,7 @@ function generate_art(input_seed) {
     svg.appendChild(star);
     num_stars++;
     if(num_stars < max_stars) {
-      setTimeout(makeStar, getDelay(star_delay[num_stars]));
+      starTimeout = setTimeout(makeStar, getDelay(star_delay[num_stars]));
     }
   }
   makeStar();
@@ -553,6 +612,7 @@ function generate_art(input_seed) {
 
   // define Plant class
   var num_plants = 0;
+  plants = [];
   function Plant() {
     var self = this;
     // declare and initialize instance attributes and methods
@@ -619,18 +679,19 @@ function generate_art(input_seed) {
       self.updateDef();
       // continue updating if needed
       if(this.stalk.stalk_height_cur < this.stalk.stalk_height_final) {
-        setTimeout(function(){self.evolve();}, getDelay(100));
+        this.evolveTimeout = setTimeout(function(){self.evolve();}, getDelay(100));
       }
     };
-    setTimeout(function(){self.evolve();}, getDelay(100));
+    this.evolveTimeout = setTimeout(function(){self.evolve();}, getDelay(100));
 
   }
   function makePlant() {
     p = new Plant();
     p.plant_id = num_stalks;
+    plants.push(p);
     num_stalks++;
     if(num_stalks < max_stalks) {
-      setTimeout(makePlant, getDelay(2500));
+      plantTimeout = setTimeout(makePlant, getDelay(2500));
     }
   }
   makePlant();
